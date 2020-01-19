@@ -24,7 +24,7 @@ _timeout = None
 
 _likes_regex = re.compile(r'like_def[^>]*>([0-9,.]+)')
 _comments_regex = re.compile(r'cmt_def[^>]*>([0-9,.]+)')
-_shares_regex = re.compile(r'([0-9,.]+)\s+Shares')
+_shares_regex = re.compile(r'([0-9,.]+)\s+Shares', re.IGNORECASE)
 _link_regex = re.compile(r"href=\"https:\/\/lm\.facebook\.com\/l\.php\?u=(.+?)\&amp;h=")
 
 _cursor_regex = re.compile(r'href:"(/page_content[^"]+)"')  # First request
@@ -65,7 +65,7 @@ def _get_posts(path, pages=10, timeout=5, sleep=0, credentials=None):
 
     _timeout = timeout
     response = _session.get(url, timeout=_timeout)
-    html = response.html
+    html = HTML(html=response.html.html.replace('<!--','').replace('-->',''))
     cursor_blob = html.html
 
     while True:
@@ -184,6 +184,8 @@ def _extract_image(article):
 
 def _extract_image_lq(article):
     story_container = article.find('div.story_body_container', first=True)
+    if story_container is None:
+        return None
     other_containers = story_container.xpath('div/div')
 
     for container in other_containers:
